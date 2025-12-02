@@ -250,10 +250,6 @@ int main() {
     float sigma_r = 30.0f; 
 
     cout << "--- PBFIC START ---" << endl;
-    
-    // ==========================================
-    // PHASE 1: ADAPTIVE SAMPLING
-    // ==========================================
     auto start_total = chrono::high_resolution_clock::now();
     cout << "1. Sampling colors..." << endl;
     vector<Vec3f> sample_colors = adaptiveSampling(src, num_samples);
@@ -264,9 +260,6 @@ int main() {
         components[i].color = sample_colors[i];
     }
 
-    // ==========================================
-    // PHASE 2: O(1) FILTERING
-    // ==========================================
     cout << "2. Filtering components (O(1))..." << endl;
     // #pragma omp parallel for
     auto start_time = chrono::high_resolution_clock::now();
@@ -281,10 +274,6 @@ int main() {
     cout << "   -> Filtering took: " << duration.count() << " ms" << endl;
     cout << "   -> Radius used: " << radius << endl;
 
-
-    // ==========================================
-    // PHASE 3: INTERPOLATION
-    // ==========================================
     cout << "3. Interpolating final result..." << endl;
     Mat result;
     applyPBFICInterpolation(src, components, result);
@@ -299,12 +288,6 @@ int main() {
     result.convertTo(final_out, CV_8UC3);
 
     imwrite("output_pbfic_result.jpg", final_out);
-    
-    // Display (if running on a machine with GUI)
-    // imshow(inputWindow, img_in);
-    // imshow(outputWindow, final_out);
-    // waitKey(0);
-
 
     cout << "--- EXPERIMENT 5.2: QUALITY (PSNR) ---" << endl;
 
