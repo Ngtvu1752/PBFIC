@@ -20,8 +20,8 @@ inline float getColorDistSq(const Vec3f& c1, const Vec3f& c2){
     return db*db + dg*dg + dr*dr;
 }
 
-// Gaussian weight (Range Kernel - gr)
-// exp( - ||Ip - Iq||^2 / (2 * sigma_r^2) )
+// Gaussian weight
+// exp( - ||Ip - Iq||^2 / (2 * sigma_r^2) ) e^
 inline float getRangeWeight(const Vec3f& Ip, const Vec3f& Iq, float sigma_r){
     float colorDistSq = getColorDistSq(Ip, Iq);
     return exp( - colorDistSq / (2.0f * sigma_r * sigma_r) );
@@ -177,20 +177,20 @@ void applyPBFICInterpolation(const Mat& src, const vector<PBFIC_Sample>& compone
             }
 
             int top_k = min(4, K); 
-            std::partial_sort(distances.begin(), distances.begin() + top_k, distances.end());
+            partial_sort(distances.begin(), distances.begin() + top_k, distances.end());
 
             Vec3f numerator_sum(0, 0, 0); 
             float denominator_sum = 0.0f;
             
-            float d_min = std::sqrt(distances[0].distSq);
+            float d_min = sqrt(distances[0].distSq);
             if (d_min < 1e-5) d_min = 1e-5;
 
             for (int i = 0; i < top_k; i++) {
                 int idx = distances[i].index;
-                float d_i = std::sqrt(distances[i].distSq);
+                float d_i = sqrt(distances[i].distSq);
                 
                 // omega = exp( - d_i / (2 * d_min) )
-                float omega = std::exp(-d_i / (2.0f * d_min));
+                float omega = exp(-d_i / (2.0f * d_min));
                 
                 Vec3f J = components[idx].J_k.at<Vec3f>(y, x);
                 float W = components[idx].W_k.at<float>(y, x);
@@ -254,7 +254,7 @@ int main() {
     // ==========================================
     // PHASE 1: ADAPTIVE SAMPLING
     // ==========================================
-    auto start_total = std::chrono::high_resolution_clock::now();
+    auto start_total = chrono::high_resolution_clock::now();
     cout << "1. Sampling colors..." << endl;
     vector<Vec3f> sample_colors = adaptiveSampling(src, num_samples);
     cout << "   Selected " << sample_colors.size() << " samples." << endl;
@@ -269,14 +269,14 @@ int main() {
     // ==========================================
     cout << "2. Filtering components (O(1))..." << endl;
     // #pragma omp parallel for
-    auto start_time = std::chrono::high_resolution_clock::now();
+    auto start_time = chrono::high_resolution_clock::now();
     // #pragma omp parallel for
     for (int i = 0; i < components.size(); i++) {
         computePBFICComponent(src, components[i], radius, sigma_r);
     }
-    auto end_time = std::chrono::high_resolution_clock::now();
+    auto end_time = chrono::high_resolution_clock::now();
 
-    std::chrono::duration<double, std::milli> duration = end_time - start_time;
+    chrono::duration<double, milli> duration = end_time - start_time;
     
     cout << "   -> Filtering took: " << duration.count() << " ms" << endl;
     cout << "   -> Radius used: " << radius << endl;
@@ -288,8 +288,8 @@ int main() {
     cout << "3. Interpolating final result..." << endl;
     Mat result;
     applyPBFICInterpolation(src, components, result);
-    auto end_total = std::chrono::high_resolution_clock::now();
-    std::chrono::duration<double, std::milli> total_duration = end_total - start_total;
+    auto end_total = chrono::high_resolution_clock::now();
+    chrono::duration<double, milli> total_duration = end_total - start_total;
     cout << "   -> Total filtering + interpolation took: " << total_duration.count() << " ms" << endl;
 
     cout << "Done!" << endl;
