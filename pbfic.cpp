@@ -47,7 +47,6 @@ vector<Vec3f> adaptiveSampling(const Mat& src, int target_samples) {
         int x = rng.uniform(0, src.cols);
         Vec3f candidate_color = src.at<Vec3f>(y, x);
 
-        // Step 2: Check Poisson Disk condition
         // Distance to ALL selected samples must be > 2 * rs
         // Compare squared distances: distSq > (2*rs)^2
         float min_dist_threshold_sq = (2.0f * rs) * (2.0f * rs);
@@ -103,7 +102,6 @@ void computePBFICComponent(const Mat& src, PBFIC_Sample& sample, int radius, flo
     int rows = src.rows;
     int cols = src.cols;
 
-    // (Intermediate Images) 
     // temp_num: (I(q) * w)
     // temp_den: (w)
     Mat temp_num(rows, cols, CV_64FC3);
@@ -125,7 +123,6 @@ void computePBFICComponent(const Mat& src, PBFIC_Sample& sample, int radius, flo
     integral(temp_num, SAT_num, CV_64F);
     integral(temp_den, SAT_den, CV_64F);
 
-    // BOX FILTER O(1) 
     sample.J_k = Mat(rows, cols, CV_32FC3);
     sample.W_k = Mat(rows, cols, CV_32F);
 
@@ -191,18 +188,15 @@ void applyPBFICInterpolation(const Mat& src, const vector<PBFIC_Sample>& compone
                 
                 // omega = exp( - d_i / (2 * d_min) )
                 float omega = exp(-d_i / (2.0f * d_min));
-                
                 Vec3f J = components[idx].J_k.at<Vec3f>(y, x);
                 float W = components[idx].W_k.at<float>(y, x);
                 
                 if (W > 1e-5) {
                     Vec3f filtered_value = J / W; // J^k / W^k
-                    
                     numerator_sum += omega * filtered_value;
                     denominator_sum += omega;
                 }
             }
-
             if (denominator_sum > 1e-5) {
                 dst.at<Vec3f>(y, x) = numerator_sum / denominator_sum;
             } else {
