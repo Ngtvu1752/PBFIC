@@ -88,7 +88,6 @@ inline Vec3d getBlockSum3(const Mat& SAT, int r0, int c0, int r1, int c1) {
     return D - B - C + A;
 }
 
-// Phiên bản overload cho ảnh 1 kênh (dùng cho W_k)
 inline double getBlockSum1(const Mat& SAT, int r0, int c0, int r1, int c1) {
     double A = SAT.at<double>(r0, c0);
     double B = SAT.at<double>(r0, c1 + 1);
@@ -142,7 +141,6 @@ void computePBFICComponent(const Mat& src, PBFIC_Sample& sample, int radius, flo
     }
 }
 
-// Sort distance and keep track of original indices
 struct DistIndex {
     float distSq; 
     int index; 
@@ -162,7 +160,6 @@ void applyPBFICInterpolation(const Mat& src, const vector<PBFIC_Sample>& compone
     
     dst = Mat::zeros(rows, cols, CV_32FC3);
 
-    // Iterate over each pixel of the original image
     for (int y = 0; y < rows; y++) {
         for (int x = 0; x < cols; x++) {
             Vec3f current_color = src.at<Vec3f>(y, x);
@@ -206,7 +203,6 @@ void applyPBFICInterpolation(const Mat& src, const vector<PBFIC_Sample>& compone
     }
 }
 
-// Input is an 8-bit CV_8U image
 double getPSNR(const Mat& I1, const Mat& I2) {
     Mat s1;
     absdiff(I1, I2, s1);     
@@ -235,7 +231,6 @@ int main() {
         return -1;
     }
 
-    // Convert float (0.0 - 255.0) 
     Mat src;
     img_in.convertTo(src, CV_32FC3);
 
@@ -292,9 +287,8 @@ int main() {
         src_8u = src.clone();
     }
 
-    // 2. Create reference image using OpenCV library
-    // Note: OpenCV uses Gaussian Spatial, while we use Box Spatial.
-    // To be consistent, we set sigmaSpace = radius.
+    // Create reference image using OpenCV library
+    // OpenCV uses Gaussian Spatial
     Mat reference_img;
     cv::bilateralFilter(src_8u, reference_img, -1, sigma_r, radius);
 
